@@ -7,6 +7,7 @@ from pymysqlreplication.row_event import (
     WriteRowsEvent,
 )
 from emitter import Emitter
+import json
 import settings
 
 def main():
@@ -15,8 +16,6 @@ def main():
         host=settings.SOCKETIO_SETTINGS['host'],
         port=settings.SOCKETIO_SETTINGS['port']
         )).Of(settings.SOCKETIO_SETTINGS['namespace'])
-    io.Emit('update', 'test')
-    '''
     stream = BinLogStreamReader(connection_settings=settings.MYSQL_SETTINGS,
                                 server_id=3,
                                 blocking=True,
@@ -25,11 +24,12 @@ def main():
                                 only_tables=[settings.DB_SETTINGS['source_table']])
 
     for binlogevent in stream:
-        binlogevent.dump()
+         for row in binlogevent.rows:
+             vals = row["after_values"]
+             print 'Updated rows for ' + json.dumps(vals)
+             io.Emit('update', json.dumps(vals))
 
     stream.close()
-    '''
-
 
 if __name__ == "__main__":
     main()
